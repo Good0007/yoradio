@@ -8,9 +8,6 @@
 
 
 Display display;
-#ifdef USE_NEXTION
-Nextion nextion;
-#endif
 
 #ifndef DUMMYDISPLAY
 //============================================================================================================================
@@ -35,12 +32,9 @@ Page *pages[] = { new Page(), new Page(), new Page(), new Page() };
 TaskHandle_t DspTask;
 QueueHandle_t displayQueue;
 
+
 void returnPlayer(){
   display.putRequest(NEWMODE, PLAYER);
-}
-
-void Display::_createDspTask(){
-  xTaskCreatePinnedToCore(loopDspTask, "DspTask", CORE_STACK_SIZE,  NULL,  4, &DspTask, !xPortGetCoreID());
 }
 
 void loopDspTask(void * pvParameters){
@@ -53,11 +47,13 @@ void loopDspTask(void * pvParameters){
   DspTask=NULL;
 }
 
+
+void Display::_createDspTask(){
+  xTaskCreatePinnedToCore(loopDspTask, "DspTask", CORE_STACK_SIZE,  NULL,  4, &DspTask, !xPortGetCoreID());
+}
+
 void Display::init() {
   Serial.print("##[BOOT]#\tdisplay.init\t");
-#ifdef USE_NEXTION
-  nextion.begin();
-#endif
 #if LIGHT_SENSOR!=255
   analogSetAttenuation(ADC_0db);
 #endif
@@ -87,11 +83,7 @@ void Display::_buildPager(){
   _meta.init("*", metaConf, config.theme.meta, config.theme.metabg);
   _title1.init("*", title1Conf, config.theme.title1, config.theme.background);
   _clock.init(clockConf, 0, 0);
-  #if DSP_MODEL==DSP_NOKIA5110
-    _plcurrent.init("*", playlistConf, 0, 1);
-  #else
-    _plcurrent.init("*", playlistConf, config.theme.plcurrent, config.theme.plcurrentbg);
-  #endif
+  _plcurrent.init("*", playlistConf, config.theme.plcurrent, config.theme.plcurrentbg);
   #if !defined(DSP_LCD)
     _plcurrent.moveTo({TFT_FRAMEWDT, (uint16_t)(dsp.plYStart+dsp.plCurrentPos*dsp.plItemHeight), (int16_t)playlistConf.width});
   #endif
@@ -105,10 +97,6 @@ void Display::_buildPager(){
     #else
       _metabackground = new FillWidget(metaBGConfInv, config.theme.metafill);
     #endif
-  #endif
-  #if DSP_MODEL==DSP_NOKIA5110
-    _plbackground = new FillWidget(playlBGConf, 1);
-    //_metabackground = new FillWidget(metaBGConf, 1);
   #endif
   #ifndef HIDE_VU
     _vuwidget = new VuWidget(vuConf, bandsConf, config.theme.vumax, config.theme.vumin, config.theme.background);

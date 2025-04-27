@@ -11,16 +11,17 @@
   #define DEF_SPI_FREQ        40000000UL      /*  set it to 0 for system default */
 #endif
 
-#if DSP_HSPI
-DspCore::DspCore(): Adafruit_ST7789(&SPI2, TFT_CS, TFT_DC, TFT_RST) {}
-#else
-DspCore::DspCore(): Adafruit_ST7789(TFT_CS, TFT_DC, TFT_RST) {}
-#endif
+
+DspCore::DspCore(): Adafruit_ST7789(TFT_CS, TFT_DC,TFT_MOSI,TFT_SCK, TFT_RST) {}
 
 #include "tools/utf8RusGFX.h"
 
 void DspCore::initDisplay() {
-  init(240,(DSP_MODEL==DSP_ST7789)?320:240);
+  // 背光控制
+  pinMode(TFT_BL, OUTPUT);
+  digitalWrite(TFT_BL, HIGH); // 拉高点亮背光
+  
+  init(240,(DSP_MODEL==DSP_ST7789)?320:240, SPI_MODE3);
   if(DEF_SPI_FREQ > 0) setSPISpeed(DEF_SPI_FREQ);
   invert();
   cp437(true);

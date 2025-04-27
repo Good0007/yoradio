@@ -1,22 +1,10 @@
-#ifndef display_h
-#define display_h
-#include "options.h"
 
 #include "Arduino.h"
 #include <Ticker.h>
 #include "config.h"
 #include "common.h"
-#include "../displays/dspcore.h"
-
-
-
-#if NEXTION_RX!=255 && NEXTION_TX!=255
-  #define USE_NEXTION
-  #include "../displays/nextion.h"
-#endif
-
-#ifndef DUMMYDISPLAY
-  void loopDspTask(void * pvParameters);
+//#include "../displays/dspcore.h"
+#include "display_core.h"
 
 class Display {
   public:
@@ -73,36 +61,4 @@ class Display {
     void _setRSSI(int rssi);
 };
 
-#else
-
-class Display {
-  public:
-    uint16_t currentPlItem;
-    uint16_t numOfNextStation;
-    displayMode_e _mode;
-  public:
-    Display() {};
-    displayMode_e mode() { return _mode; }
-    void mode(displayMode_e m) { _mode=m; }
-    void init();
-    void _start();
-    void putRequest(displayRequestType_e type, int payload=0);
-    void loop(){}
-    bool ready() { return true; }
-    void resetQueue(){}
-    void centerText(const char* text, uint8_t y, uint16_t fg, uint16_t bg){}
-    void rightText(const char* text, uint8_t y, uint16_t fg, uint16_t bg){}
-    void flip(){}
-    void invert(){}
-    void setContrast(){}
-    bool deepsleep(){return true;}
-    void wakeup(){}
-    void printPLitem(uint8_t pos, const char* item){}
-};
-
-#endif
-
 extern Display display;
-
-
-#endif
