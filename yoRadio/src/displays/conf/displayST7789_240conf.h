@@ -20,7 +20,7 @@
 /* SROLLS  */                            /* {{ left, top, fontsize, align }, buffsize, uppercase, width, scrolldelay, scrolldelta, scrolltime } */
 const ScrollConfig metaConf       PROGMEM = {{ TFT_FRAMEWDT, TFT_FRAMEWDT, 3, WA_LEFT }, 140, true, MAX_WIDTH, 5000, 5, 30 };
 const ScrollConfig title1Conf     PROGMEM = {{ TFT_FRAMEWDT, 50, 2, WA_LEFT }, 140, true, MAX_WIDTH, 5000, 4, 30 };
-const ScrollConfig title2Conf     PROGMEM = {{ TFT_FRAMEWDT, 70, 2, WA_LEFT }, 140, true, MAX_WIDTH, 5000, 4, 30 };
+const ScrollConfig title2Conf     PROGMEM = {{ TFT_FRAMEWDT, 68, 2, WA_LEFT }, 140, true, MAX_WIDTH, 5000, 4, 30 };
 const ScrollConfig playlistConf   PROGMEM = {{ TFT_FRAMEWDT, 112, 2, WA_LEFT }, 140, true, MAX_WIDTH, 0, 2, 30 };
 const ScrollConfig apTitleConf    PROGMEM = {{ TFT_FRAMEWDT, TFT_FRAMEWDT, 3, WA_CENTER }, 140, false, MAX_WIDTH, 0, 4, 20 };
 const ScrollConfig apSettConf     PROGMEM = {{ TFT_FRAMEWDT, 240-TFT_FRAMEWDT-16, 2, WA_LEFT }, 140, false, MAX_WIDTH, 0, 4, 30 };
@@ -60,7 +60,7 @@ const char         voltxtFmt[]    PROGMEM = "%d";
 const char        bitrateFmt[]    PROGMEM = "%d kBs";
 
 /* MOVES  */                             /* { left, top, width } */
-const MoveConfig    clockMove     PROGMEM = { 0, 176, 0 };
+const MoveConfig    clockMove     PROGMEM = { 0, 168, 0 };
 const MoveConfig   weatherMove    PROGMEM = { TFT_FRAMEWDT, 202, MAX_WIDTH };
 const MoveConfig   weatherMoveVU  PROGMEM = { TFT_FRAMEWDT, 202, MAX_WIDTH };
 

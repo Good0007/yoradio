@@ -617,14 +617,7 @@ void ClockWidget::init(WidgetConfig wconf, uint16_t fgcolor, uint16_t bgcolor){
 
 void ClockWidget::_begin(){
 #ifdef PSFBUFFER
-  // 限制帧缓冲高度，确保不覆盖比特率区域（比特率在y=195）
-  uint16_t safeHeight = _clockheight;
-  uint16_t fbBottom = (_config.top - _timeheight) + _clockheight;
-  if (fbBottom > 190) {  // 比特率在y=195，留5像素安全边距
-    safeHeight = 190 - (_config.top - _timeheight);
-    if (safeHeight < 0 || safeHeight > _clockheight) safeHeight = _clockheight;
-  }
-  _fb->begin(&dsp, _clockleft, _config.top-_timeheight, _clockwidth, safeHeight, config.theme.background);
+  _fb->begin(&dsp, _clockleft, _config.top-_timeheight, _clockwidth, _clockheight+1, config.theme.background);
 #endif
 }
 

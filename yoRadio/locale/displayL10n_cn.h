@@ -57,7 +57,7 @@ const char* const mnths[]   PROGMEM = { jan, feb, mar, apr, may, jun, jul, aug, 
 const char* const wind[]    PROGMEM = { wn_N, wn_NNE, wn_NE, wn_ENE, wn_E, wn_ESE, wn_SE, wn_SSE, wn_S, wn_SSW, wn_SW, wn_WSW, wn_W, wn_WNW, wn_NW, wn_NNW, wn_N };
 
 const char    const_PlReady[]    PROGMEM = "就绪";
-const char  const_PlStopped[]    PROGMEM = "已停止";
+const char  const_PlStopped[]    PROGMEM = "暂停";
 const char  const_PlConnect[]    PROGMEM = "播放中";
 const char  const_DlgVolume[]    PROGMEM = "音量";
 const char    const_DlgLost[]    PROGMEM = "连接断开";
