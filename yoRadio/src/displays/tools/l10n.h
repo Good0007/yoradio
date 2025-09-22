@@ -4,6 +4,8 @@ namespace LANG{
 //==================================================
 #if L10N_LANGUAGE==RU
   #define L10N_PATH "../../../locale/displayL10n_ru.h"
+#elif L10N_LANGUAGE==CN
+  #define L10N_PATH "../../../locale/displayL10n_cn.h"
 #else
   #define L10N_PATH "../../../locale/displayL10n_en.h"
 #endif

@@ -17,6 +17,27 @@ class DspCore: public yoDisplay {
     DspCore();
     void initDisplay();
     void clearDsp(bool black=false);
+    
+    // 实现Adafruit_GFX的纯虚函数
+    void drawPixel(int16_t x, int16_t y, uint16_t color) override;
+    
+    // 重写write方法以支持中文UTF-8
+    size_t write(uint8_t c) override;
+    size_t write(const uint8_t *buffer, size_t size) override;
+
+    // ST7789驱动需要的方法
+    void fillScreen(uint16_t color);
+    void fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color);
+    void init(uint16_t width, uint16_t height, uint8_t spiMode = 0);
+    void setRotation(uint8_t rotation);
+    void invertDisplay(bool invert);
+    void enableDisplay(bool enable);
+    void enableSleep(bool enable);
+    void cp437(bool x);
+    
+    // Adafruit_GFX兼容方法
+    void setAddrWindow(int16_t x, int16_t y, int16_t w, int16_t h);
+    void writePixels(uint16_t *colors, uint32_t len);
     void printClock(){}
     #ifdef DSP_OLED
     inline void loop(bool force=false){
@@ -68,7 +89,8 @@ class DspCore: public yoDisplay {
         if(_clipping){
           if ((x < _cliparea.left) || (x > _cliparea.left+_cliparea.width) || (y < _cliparea.top) || (y > _cliparea.top + _cliparea.height)) return;
         }
-        yoDisplay::writePixel(x, y, color);
+        // 直接调用drawPixel避免额外开销
+        drawPixel(x, y, color);
       }
       inline void writeFillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color) {
         if(_clipping){

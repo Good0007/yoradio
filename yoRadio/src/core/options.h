@@ -45,6 +45,7 @@ The connection tables are located here https://github.com/e2002/yoradio#connecti
 #define DSP_ILI9225     17    // 220x176  2.0'  https://aliexpress.com/item/32952021835.html
 #define DSP_ST7789_240  18    // 240x240  1.3'  https://aliexpress.com/item/32996979276.html
 /* !!! DSP_ST7789_240 requires further development when used in conjunction with the VS1053 module !!! See the link https://www.instructables.com/Adding-CS-Pin-to-13-LCD/ */
+#define DSP_ST7789_240_ESPIDF  22    // 240x240  1.3' using ESP-IDF native LCD driver
 #define DSP_ST7796      19    // 480x320  3.5'  https://aliexpress.com/item/1005004632953455.html?sku_id=12000029911293172
 #define DSP_GC9A01A     20    // 240x240  1.28' https://aliexpress.com/item/1005004069703494.html?sku_id=12000029869654615
 #define DSP_ILI9488     21    // 480x320  3.5'  https://aliexpress.com/item/1005001999296476.html?sku_id=12000018365356570
@@ -480,6 +481,7 @@ The connection tables are located here https://github.com/e2002/yoradio#connecti
 
 #define EN  1
 #define RU  2
+#define CN  3
 #ifndef L10N_LANGUAGE
   #define L10N_LANGUAGE EN
 #endif

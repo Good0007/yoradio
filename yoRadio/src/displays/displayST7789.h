@@ -3,7 +3,6 @@
 
 #include "Arduino.h"
 #include <Adafruit_GFX.h>
-#include <Adafruit_ST7789.h>
 
 #if DSP_MODEL==DSP_ST7789_76
   #include "fonts/bootlogo62x40.h"
@@ -14,7 +13,14 @@
 #endif
 
 typedef GFXcanvas16 Canvas;
-typedef Adafruit_ST7789 yoDisplay;
+
+// 自定义 yoDisplay 基类，继承自 Adafruit_GFX
+class yoDisplay : public Adafruit_GFX {
+  public:
+    yoDisplay(int16_t w, int16_t h) : Adafruit_GFX(w, h) {}
+    virtual void setAddrWindow(int16_t x, int16_t y, int16_t w, int16_t h) {}
+    virtual void writePixels(uint16_t *colors, uint32_t len) {}
+};
 
 #include "tools/commongfx.h"
 

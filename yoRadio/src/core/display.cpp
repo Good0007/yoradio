@@ -8,6 +8,7 @@
 #include "network.h"
 #include "netserver.h"
 #include "timekeeper.h"
+#include "esp_task_wdt.h"
 #include "../pluginsManager/pluginsManager.h"
 #include "../displays/dspcore.h"
 #include "../displays/widgets/widgets.h"
@@ -58,6 +59,8 @@ static void loopDspTask(void * pvParameters){
       netserver.loop();
     #endif
   #endif
+    // 重置看门狗，避免触发
+    esp_task_wdt_reset();
     vTaskDelay(DSP_TASK_DELAY);
   }
   vTaskDelete( NULL );
@@ -105,7 +108,18 @@ void Display::init() {
   analogSetAttenuation(ADC_0db);
 #endif
   _bootStep = 0;
+  
+  // 初始化背光引脚
+#ifdef TFT_BL
+  Serial.print("##[DEBUG]## Setting up backlight pin: ");
+  Serial.println(TFT_BL);
+  pinMode(TFT_BL, OUTPUT);
+  digitalWrite(TFT_BL, HIGH);  // 先设置为高电平
+  Serial.println("##[DEBUG]## Backlight set to HIGH");
+#endif
+
   dsp.initDisplay();
+
   displayQueue=NULL;
   displayQueue = xQueueCreate( 5, sizeof( requestParams_t ) );
   while(displayQueue==NULL){;}

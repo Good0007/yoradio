@@ -21,6 +21,20 @@ size_t strlen_utf8(const char* s) {
 }
 
 char* utf8Rus(const char* str, bool uppercase) {
+  // 首先尝试中文字符转换
+  static char tempBuf[BUFLEN];
+  bool hasChinese = false;
+  
+  // 检查是否包含中文字符（3字节UTF8，范围0xE4-0xE9）
+  for (int i = 0; str[i]; i++) {
+    uint8_t c = (uint8_t)str[i];
+    if (c >= 0xE4 && c <= 0xE9) {
+      hasChinese = true;
+      break;
+    }
+  }
+  
+  // 原有的俄文处理逻辑
   static char out[BUFLEN];
   int outPos = 0;
 #if defined(DSP_LCD) && !defined(LCD_RUS)
