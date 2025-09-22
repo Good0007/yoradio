@@ -22,7 +22,11 @@ ESP32-S3 Configuration - DEBUG VERSION
 
 /*        基本设置                 */
 #define LED_INVERT      false               
-#define L10N_LANGUAGE   EN                  /* 使用修改后的中文语言包（英文内容）*/
+#define L10N_LANGUAGE   CN                  /* 使用中文语言包 */
+
+/*        时区设置 - 北京时间（东八区）  */
+#define DEFAULT_TIMEZONE_HOUR   8           /* UTC+8 北京时间 */
+#define DEFAULT_TIMEZONE_MIN    0           /* 时区分钟偏移 */
 
 /*        显示设置 - 临时禁用测试        */
 //##############################################################################
@@ -60,23 +64,23 @@ ESP32-S3 Configuration - DEBUG VERSION
 #define BTN_UP            9                 /* 复用左按键作为UP功能 */
 #define BTN_DOWN          21                /* 复用右按键作为DOWN功能 */
 #define BTN_CENTER        14               /* 中心按键 - 禁用（无硬件） */
-
-/*        按键功能详细说明           */
+#define USE_CH_FONT_16   true             /* 使用16x16中文字体 */
+/*        按键功能详细说明 - 优化的三键布局           */
 /* 
- * BTN_MODE (GPIO 14) - 主功能按键:
- *   - 短按: 切换模式/SD卡模式切换
- *   - 双击: 进入菜单/电台列表
- *   - 长按: 特殊功能
+ * BTN_CENTER (GPIO 14) - 中心按键:
+ *   - 短按: 播放/暂停
+ *   - 长按: 进入/退出播放列表
+ *   - 双击: 静音/取消静音
  * 
- * BTN_LEFT/BTN_UP (GPIO 9) - 左/上按键: 
- *   - 在播放模式: 短按进入电台列表，长按上一首
- *   - 在电台列表: 上一个电台
- *   - 双击: 播放上一首歌曲
+ * BTN_UP (GPIO 9) - 上按键: 
+ *   - 短按: 音量+
+ *   - 长按: 上一曲
+ *   - 双击: 进入播放列表
  * 
- * BTN_RIGHT/BTN_DOWN (GPIO 21) - 右/下按键:
- *   - 在播放模式: 短按进入电台列表，长按下一首
- *   - 在电台列表: 下一个电台
- *   - 双击: 播放下一首歌曲
+ * BTN_DOWN (GPIO 21) - 下按键:
+ *   - 短按: 音量-
+ *   - 长按: 下一曲
+ *   - 双击: 进入播放列表
  */
 
 /*        禁用所有可选功能和按键      */

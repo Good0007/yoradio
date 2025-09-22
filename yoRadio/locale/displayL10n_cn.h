@@ -5,21 +5,21 @@
     中文语言包 - Chinese Language Pack
     包含常用中文字符，需要配合中文字体使用
 *************************************************************************************/
-const char mon[] PROGMEM = "周一";
-const char tue[] PROGMEM = "周二";
-const char wed[] PROGMEM = "周三";
-const char thu[] PROGMEM = "周四";
-const char fri[] PROGMEM = "周五";
-const char sat[] PROGMEM = "周六";
-const char sun[] PROGMEM = "周日";
+const char mon[] PROGMEM = "一";
+const char tue[] PROGMEM = "二";
+const char wed[] PROGMEM = "三";
+const char thu[] PROGMEM = "四";
+const char fri[] PROGMEM = "五";
+const char sat[] PROGMEM = "六";
+const char sun[] PROGMEM = "日";
 
-const char monf[] PROGMEM = "星期一";
-const char tuef[] PROGMEM = "星期二";
-const char wedf[] PROGMEM = "星期三";
-const char thuf[] PROGMEM = "星期四";
-const char frif[] PROGMEM = "星期五";
-const char satf[] PROGMEM = "星期六";
-const char sunf[] PROGMEM = "星期日";
+const char monf[] PROGMEM = "周一";
+const char tuef[] PROGMEM = "周二";
+const char wedf[] PROGMEM = "周三";
+const char thuf[] PROGMEM = "周四";
+const char frif[] PROGMEM = "周五";
+const char satf[] PROGMEM = "周六";
+const char sunf[] PROGMEM = "周日";
 
 const char jan[] PROGMEM = "1月";
 const char feb[] PROGMEM = "2月";
@@ -58,7 +58,7 @@ const char* const wind[]    PROGMEM = { wn_N, wn_NNE, wn_NE, wn_ENE, wn_E, wn_ES
 
 const char    const_PlReady[]    PROGMEM = "就绪";
 const char  const_PlStopped[]    PROGMEM = "已停止";
-const char  const_PlConnect[]    PROGMEM = "连接中";
+const char  const_PlConnect[]    PROGMEM = "播放中";
 const char  const_DlgVolume[]    PROGMEM = "音量";
 const char    const_DlgLost[]    PROGMEM = "连接断开";
 const char  const_DlgUpdate[]    PROGMEM = "更新中";

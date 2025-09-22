@@ -52,6 +52,13 @@ void Player::init() {
     #if !I2S_INTERNAL
       setPinout(I2S_BCLK, I2S_LRC, I2S_DOUT);
     #endif
+    // 为m3u8流媒体设置PSRAM缓冲区
+    #ifdef BOARD_HAS_PSRAM
+      if(psramFound()) {
+        setBufsize(1600, 400000);  // RAM缓冲区1.6KB，PSRAM缓冲区400KB
+        Serial.println("##[BOOT]#\tPSRAM缓冲区已启用用于m3u8支持");
+      }
+    #endif
   #else
     SPI.begin();
     if(VS1053_RST>0) ResetChip();
@@ -235,6 +242,7 @@ void Player::_play(uint16_t stationId) {
   connproc = true;
   if(isConnected){
     _status = PLAYING;
+    // 清空"连接中"状态，与browseUrl()保持一致
     config.configPostPlaying(stationId);
     setOutputPins(true);
     if (player_on_start_play) player_on_start_play();

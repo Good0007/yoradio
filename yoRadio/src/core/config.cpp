@@ -104,6 +104,17 @@ void Config::init() {
   _SDplaylistFS = &SPIFFS;
   #endif
   _bootDone=false;
+  
+  // 强制设置为北京时间（东八区）
+#ifdef DEFAULT_TIMEZONE_HOUR
+  if (store.tzHour != DEFAULT_TIMEZONE_HOUR || store.tzMin != DEFAULT_TIMEZONE_MIN) {
+    store.tzHour = DEFAULT_TIMEZONE_HOUR;
+    store.tzMin = DEFAULT_TIMEZONE_MIN;
+    eepromWrite(EEPROM_START, store);  // 立即保存时区设置
+    Serial.printf("##[CONFIG]## 强制设置时区为北京时间 UTC+%d:%02d\n", store.tzHour, store.tzMin);
+  }
+#endif
+  
   setTimeConf();
 }
 
@@ -506,10 +517,10 @@ void Config::resetSystem(const char *val, uint8_t clientId){
     return;
   }
   if (strcmp(val, "timezone") == 0) {
-    saveValue(&store.tzHour, (int8_t)3, false);
+    saveValue(&store.tzHour, (int8_t)8, false);  // 北京时间 UTC+8
     saveValue(&store.tzMin, (int8_t)0, false);
     saveValue(store.sntp1, "pool.ntp.org", 35, false);
-    saveValue(store.sntp2, "0.ru.pool.ntp.org", 35);
+    saveValue(store.sntp2, "cn.pool.ntp.org", 35);  // 中国 NTP 池
     saveValue(&store.timeSyncInterval, (uint16_t)60);
     saveValue(&store.timeSyncIntervalRTC, (uint16_t)24);
     configTime(store.tzHour * 3600 + store.tzMin * 60, getTimezoneOffset(), store.sntp1, store.sntp2);
@@ -519,8 +530,8 @@ void Config::resetSystem(const char *val, uint8_t clientId){
   }
   if (strcmp(val, "weather") == 0) {
     saveValue(&store.showweather, false, false);
-    saveValue(store.weatherlat, "55.7512", 10, false);
-    saveValue(store.weatherlon, "37.6184", 10, false);
+    saveValue(store.weatherlat, "39.9042", 10, false);  // 北京纬度
+    saveValue(store.weatherlon, "116.4074", 10, false); // 北京经度
     saveValue(store.weatherkey, "", WEATHERKEY_LENGTH);
     saveValue(&store.weatherSyncInterval, (uint16_t)30);
     //network.trueWeather=false;
@@ -559,8 +570,16 @@ void Config::setDefaults() {
   store.lastSSID = 0;
   store.audioinfo = false;
   store.smartstart = 2;
-  store.tzHour = 3;
-  store.tzMin = 0;
+#ifdef DEFAULT_TIMEZONE_HOUR
+  store.tzHour = DEFAULT_TIMEZONE_HOUR;  // 使用自定义时区（北京时间UTC+8）
+#else
+  store.tzHour = 8;                      // 默认时区（北京时间UTC+8）
+#endif
+#ifdef DEFAULT_TIMEZONE_MIN
+  store.tzMin = DEFAULT_TIMEZONE_MIN;    // 使用自定义时区分钟偏移
+#else
+  store.tzMin = 0;                       // 默认无分钟偏移
+#endif
   store.timezoneOffset = 0;
 
   store.vumeter=false;
@@ -574,10 +593,10 @@ void Config::setDefaults() {
   store.brightness=100;
   store.contrast=55;
   strlcpy(store.sntp1,"pool.ntp.org", 35);
-  strlcpy(store.sntp2,"1.ru.pool.ntp.org", 35);
+  strlcpy(store.sntp2,"cn.pool.ntp.org", 35);
   store.showweather=false;
-  strlcpy(store.weatherlat,"55.7512", 10);
-  strlcpy(store.weatherlon,"37.6184", 10);
+  strlcpy(store.weatherlat,"39.9042", 10);  // 北京纬度
+  strlcpy(store.weatherlon,"116.4074", 10); // 北京经度
   strlcpy(store.weatherkey,"", WEATHERKEY_LENGTH);
   store._reserved = 0;
   store.lastSdStation = 0;
@@ -909,10 +928,14 @@ bool Config::saveWifi() {
 }
 
 void Config::setTimeConf(){
+  Serial.printf("##[CONFIG]## 设置时区配置: UTC%+d:%02d, SNTP1=%s, SNTP2=%s\n", 
+                store.tzHour, store.tzMin, store.sntp1, store.sntp2);
   if(strlen(store.sntp1)>0 && strlen(store.sntp2)>0){
     configTime(store.tzHour * 3600 + store.tzMin * 60, getTimezoneOffset(), store.sntp1, store.sntp2);
+    Serial.printf("##[CONFIG]## 使用双SNTP服务器配置时间\n");
   }else if(strlen(store.sntp1)>0){
     configTime(store.tzHour * 3600 + store.tzMin * 60, getTimezoneOffset(), store.sntp1);
+    Serial.printf("##[CONFIG]## 使用单SNTP服务器配置时间\n");
   }
 }
 

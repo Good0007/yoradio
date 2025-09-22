@@ -2,6 +2,18 @@
 #if DSP_MODEL==DSP_ST7789 || DSP_MODEL==DSP_ST7789_240 || DSP_MODEL==DSP_ST7789_76 || DSP_MODEL==DSP_ST7789_170
 #include "dspcore.h"
 #include "../core/config.h"
+#endif
+
+#include "fonts/NotoSans_10x10.h"
+#include <string.h>
+#define CH_FONT_W_10_10 CHINESE_FONT_10_WIDTH
+#define CH_FONT_H_10_10 CHINESE_FONT_10_HEIGHT
+#define FIND_CH_10   findChineseChar_10
+
+#include "fonts/NotoSans_20x20.h"
+#define CH_FONT_W CHINESE_FONT_20_WIDTH
+#define CH_FONT_H CHINESE_FONT_20_HEIGHT
+#define FIND_CH   findChineseChar_20
 
 // ST7789 7PIN 显示驱动 - ESP32-S3优化版本
 // ST7789 命令定义
@@ -209,15 +221,21 @@ size_t DspCore::write(const uint8_t *buffer, size_t size) {
             i += 2;
         } else if ((byte1 & 0xF0) == 0xE0 && i + 2 < size) {
             // 3字节UTF-8 (中文字符)
-            uint32_t unicode = ((byte1 & 0x0F) << 12) | 
-                              ((buffer[i + 1] & 0x3F) << 6) | 
-                              (buffer[i + 2] & 0x3F);
+            uint8_t byte2 = buffer[i + 1];
+            uint8_t byte3 = buffer[i + 2];
             
-            // 绘制中文字符
-            //drawChineseChar(getCursorX(), getCursorY(), unicode, textcolor);
-            
-            bytesProcessed += 3;
-            i += 3;
+            // 验证UTF-8序列的有效性
+            if ((byte2 & 0xC0) == 0x80 && (byte3 & 0xC0) == 0x80) {
+                uint32_t unicode = ((byte1 & 0x0F) << 12) | 
+                                  ((byte2 & 0x3F) << 6) | 
+                                  (byte3 & 0x3F);
+                drawChineseChar(cursor_x, cursor_y, unicode, textcolor);
+                bytesProcessed += 3;
+                i += 3;
+            } else {
+                // 无效的UTF-8序列，跳过第一个字节
+                i++;
+            }
         } else {
             // 无法处理的字符，跳过
             i++;
@@ -340,4 +358,97 @@ void DspCore::writePixels(uint16_t *colors, uint32_t len) {
     }
 }
 
-#endif
+// 绘制中文字符（根据当前 textsize_x 选择不同大小的位图字体）
+void DspCore::drawChineseChar(int16_t x, int16_t y, uint32_t unicode, uint16_t color) {
+    // 直接使用 Adafruit_GFX 的 protected 成员变量
+    uint8_t current_textsize = textsize_x ? textsize_x : 1;  // 获取当前 textsize，默认为1
+    
+    const uint8_t* bitmap = nullptr;
+    int16_t glyphW = 0, glyphH = 0;
+    
+    // PSRAM兼容性：确保字符查找在内部SRAM中进行
+    volatile uint32_t safe_unicode = unicode;  // 防止编译器优化
+    
+    if (current_textsize == 1) {
+        // textsize=1 暂时使用 6x8 字体（等待10x10字体生成）
+        const ChineseCharMapping_10* charData = FIND_CH_10(safe_unicode);
+        if (!charData) {
+            // 未找到字符，绘制占位符
+            drawRect(x, y, 10, 10, color);
+            cursor_x += 10;
+            return;
+        }
+        
+        bitmap = charData->bitmap;
+        glyphW = CH_FONT_W_10_10;
+        glyphH = CH_FONT_H_10_10;
+        y -= 1;
+        
+    } else {
+        // 其他textsize使用默认20x20字体
+        const ChineseCharMapping_20* charData = FIND_CH(safe_unicode);
+        if (!charData) {
+            // 未找到字符，绘制占位符
+            drawRect(x, y, 20, 20, color);
+            cursor_x += 20;
+            return;
+        }
+        
+        bitmap = charData->bitmap;
+        glyphW = CH_FONT_W;
+        glyphH = CH_FONT_H;
+        y -= 1;
+    }
+
+    // 确保bitmap指针有效
+    if (!bitmap) {
+        drawRect(x, y, glyphW, glyphH, color);
+        cursor_x += glyphW;
+        return;
+    }
+
+    // 为避免在开启 PSRAM 时从 Flash/PSRAM 只读区域直接逐字节读取导致的乱码问题，
+    // 将位图拷贝到栈上（内部 DRAM），再按位渲染。
+    const int bytesPerRow = (glyphW + 7) >> 3;  // 每行字节数（按8像素对齐）
+    const int totalBytes  = bytesPerRow * glyphH;
+
+    // 10x10 最大 20 字节，20x20 最大 60 字节；这里用最大 64 字节的栈缓冲足够
+    uint8_t localBuf[64];
+    int copyBytes = totalBytes <= (int)sizeof(localBuf) ? totalBytes : (int)sizeof(localBuf);
+    // 直接 memcpy 即可（ESP32 上 memcpy_P 等同于 memcpy），来源可能在 Flash，但可被正常读取
+    memcpy(localBuf, bitmap, copyBytes);
+
+    // 如果有背景色，先整体铺底，随后仅绘制前景位
+    if (textbgcolor != textcolor) {
+        fillRect(x, y, glyphW, glyphH, textbgcolor);
+    }
+
+    for (int row = 0; row < glyphH; ++row) {
+        const uint8_t* rowPtr = &localBuf[row * bytesPerRow];
+        uint8_t byte = 0;
+        for (int col = 0; col < glyphW; ++col) {
+            if ((col & 7) == 0) {
+                byte = rowPtr[col >> 3];
+            }
+            // 高位在前：与 0x80 >> (col & 7) 对应
+            if (byte & (0x80 >> (col & 7))) {
+                drawPixel(x + col, y + row, color);
+            } else if (textbgcolor != textcolor) {
+                // 背景已整体填充，无需逐点绘制
+            }
+        }
+        // 喂狗，防止长串绘制卡顿
+        if ((row & 7) == 7) {
+            yield();
+        }
+    }
+
+    // 更新光标位置
+    cursor_x += glyphW;
+    
+    // 换行处理
+    if (wrap && (cursor_x + glyphW > _width)) {
+        cursor_x = 0;
+        cursor_y += glyphH;
+    }
+}

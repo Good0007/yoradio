@@ -11,6 +11,7 @@
 long encOldPosition  = 0;
 long enc2OldPosition  = 0;
 int lpId = -1;
+uint8_t lastVolumeBeforeMute = 50;  // 存储静音前的音量
 
 #if DSP_MODEL==DSP_DUMMY
 #define DUMMYDISPLAY
@@ -362,10 +363,19 @@ void irLoop() {
 void onBtnLongPressStart(int id) {
   switch ((controlEvt_e)id) {
     case EVT_BTNLEFT:
-    case EVT_BTNRIGHT:
+    case EVT_BTNRIGHT: {
+        lpId = id;
+        break;
+      }
     case EVT_BTNUP:
     case EVT_BTNDOWN: {
+        // 长按UP/DOWN：上一曲/下一曲
         lpId = id;
+        if (id == EVT_BTNUP) {
+          player.prev();
+        } else {
+          player.next();
+        }
         break;
       }
     case EVT_BTNCENTER:
@@ -373,6 +383,7 @@ void onBtnLongPressStart(int id) {
 #       if defined(DUMMYDISPLAY) && !defined(USE_NEXTION)
         break;
 #       endif
+        // 长按中心键：进入/退出播放列表
         display.putRequest(NEWMODE, display.mode() == PLAYER ? STATIONS : PLAYER);
         break;
       }
@@ -434,9 +445,8 @@ void onBtnDuringLongPress(int id) {
         }
       case EVT_BTNUP:
       case EVT_BTNDOWN: {
-          if (display.mode() == PLAYER) {
-            display.putRequest(NEWMODE, STATIONS);
-          }
+          // 长按UP/DOWN期间不执行重复动作，只在开始时切歌
+          // 如果需要在播放列表中快速导航，可以添加这个功能
           if (display.mode() == STATIONS) {
             controlsEvent(id == EVT_BTNDOWN);
           }
@@ -524,27 +534,17 @@ void onBtnClick(int id) {
       }
     case EVT_BTNUP:
     case EVT_BTNDOWN: {
-        if (DSP_MODEL == DSP_DUMMY) {
-          if (id == EVT_BTNUP) {
-            player.next();
-          } else {
-            player.prev();
-          }
-        } else {
-          if (display.mode() == PLAYER) {
-            if(config.store.skipPlaylistUpDown || ENC2_BTNL!=255){
-              if (id == EVT_BTNUP) {
-                player.prev();
-              } else {
-                player.next();
-              }
-            }else{
-              display.putRequest(NEWMODE, STATIONS);
-            }
-          }
-          if (display.mode() == STATIONS) {
-            controlsEvent(id == EVT_BTNDOWN);
-          }
+        // 短按：音量调节
+        if (display.mode() == PLAYER || display.mode() == VOL) {
+          // 短按调节音量
+          player.stepVol(id == EVT_BTNUP);
+          #if !defined(DUMMYDISPLAY) || defined(USE_NEXTION)
+            display.putRequest(NEWMODE, VOL);
+          #endif
+        }
+        if (display.mode() == STATIONS) {
+          // 在播放列表中导航
+          controlsEvent(id == EVT_BTNDOWN);
         }
         break;
       }
@@ -573,14 +573,31 @@ void onBtnDoubleClick(int id) {
     case EVT_BTNCENTER:
     case EVT_ENCBTNB:
     case EVT_ENC2BTNB: {
-        //display.putRequest(NEWMODE, display.mode() == PLAYER ? VOL : PLAYER);
-        onBtnClick(EVT_BTNMODE);
+        // 双击中心键：静音/取消静音
+        if (display.mode() == PLAYER) {
+          if (config.store.volume > 0) {
+            lastVolumeBeforeMute = config.store.volume;
+            player.setVol(0);
+          } else {
+            player.setVol(lastVolumeBeforeMute > 0 ? lastVolumeBeforeMute : 50);
+          }
+        } else {
+          onBtnClick(EVT_BTNMODE);
+        }
         break;
       }
     case EVT_BTNRIGHT: {
         if (display.mode() != PLAYER) return;
         if (network.status != CONNECTED && network.status!=SDREADY) return;
         player.next();
+        break;
+      }
+    case EVT_BTNUP:
+    case EVT_BTNDOWN: {
+        // 双击UP/DOWN：进入播放列表
+        if (display.mode() == PLAYER) {
+          display.putRequest(NEWMODE, STATIONS);
+        }
         break;
       }
     default:

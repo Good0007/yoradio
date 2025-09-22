@@ -617,7 +617,14 @@ void ClockWidget::init(WidgetConfig wconf, uint16_t fgcolor, uint16_t bgcolor){
 
 void ClockWidget::_begin(){
 #ifdef PSFBUFFER
-  _fb->begin(&dsp, _clockleft, _config.top-_timeheight, _clockwidth, _clockheight+1, config.theme.background);
+  // 限制帧缓冲高度，确保不覆盖比特率区域（比特率在y=195）
+  uint16_t safeHeight = _clockheight;
+  uint16_t fbBottom = (_config.top - _timeheight) + _clockheight;
+  if (fbBottom > 190) {  // 比特率在y=195，留5像素安全边距
+    safeHeight = 190 - (_config.top - _timeheight);
+    if (safeHeight < 0 || safeHeight > _clockheight) safeHeight = _clockheight;
+  }
+  _fb->begin(&dsp, _clockleft, _config.top-_timeheight, _clockwidth, safeHeight, config.theme.background);
 #endif
 }
 
@@ -699,7 +706,9 @@ void ClockWidget::_printClock(bool force){
         gfx.drawFastHLine(_linesleft, _top()-(_timeheight)/2, CHARWIDTH * _superfont * 2 + _space, config.theme.div);
         gfx.setFont();
         gfx.setTextSize(_superfont);
-        gfx.setCursor(_linesleft+_space+1, _top()-CHARHEIGHT * _superfont);
+        // 为中文星期显示添加向下偏移，改善与英文字符的基线对齐
+        int16_t dowYOffset = (L10N_LANGUAGE == CN) ? 8 : 0;  // 中文时向下偏移3像素
+        gfx.setCursor(_linesleft+_space+1, _top()-CHARHEIGHT * _superfont + dowYOffset);
         gfx.setTextColor(config.theme.dow, config.theme.background);
         gfx.print(utf8Rus(LANG::dow[network.timeinfo.tm_wday], false));
         sprintf(_tmp, "%2d %s %d", network.timeinfo.tm_mday,LANG::mnths[network.timeinfo.tm_mon], network.timeinfo.tm_year+1900);
@@ -753,14 +762,16 @@ void ClockWidget::_printClock(bool force){
 
 void ClockWidget::_clearClock(){
 #ifdef PSFBUFFER
-  if(_fb->ready()) _fb->clear();
+  if(_fb->ready()) {
+    // 帧缓冲高度已在_begin()中被限制，可以安全清除整个缓冲区
+    _fb->fillRect(0, 0, _clockwidth, _fb->height(), config.theme.background);
+  }
   else
 #endif
-#ifndef CLOCKFONT5x7
-  dsp.fillRect(_left(), _top()-_timeheight, _clockwidth, _clockheight+1, config.theme.background);
-#else
-  dsp.fillRect(_left(), _top(), _clockwidth+1, _clockheight+1, config.theme.background);
-#endif
+  {
+    // 直接绘制模式：使用屏幕坐标清除时钟区域的精确矩形
+    dsp.fillRect(_left(), _top() - _timeheight, _clockwidth, _clockheight, config.theme.background);
+  }
 }
 
 void ClockWidget::draw(bool force){
@@ -946,7 +957,7 @@ void PlayListWidget::_printPLitem(uint8_t pos, const char* item){
   } else {
     uint8_t plColor = (abs(pos - _plCurrentPos)-1)>4?4:abs(pos - _plCurrentPos)-1;
     dsp.setTextColor(config.theme.playlist[plColor], config.theme.background);
-    dsp.setCursor(TFT_FRAMEWDT, _plYStart + pos * _plItemHeight);
+    dsp.setCursor(TFT_FRAMEWDT, _plYStart + pos * _plItemHeight - 1);
     dsp.fillRect(0, _plYStart + pos * _plItemHeight - 1, dsp.width(), _plItemHeight - 2, config.theme.background);
     dsp.print(utf8Rus(item, true));
   }

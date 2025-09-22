@@ -24,6 +24,10 @@ class DspCore: public yoDisplay {
     // 重写write方法以支持中文UTF-8
     size_t write(uint8_t c) override;
     size_t write(const uint8_t *buffer, size_t size) override;
+    
+    // 中文字符绘制方法
+    void drawChineseChar(int16_t x, int16_t y, uint32_t unicode, uint16_t color);
+    const uint8_t* getChineseBitmap(uint32_t unicode);
 
     // ST7789驱动需要的方法
     void fillScreen(uint16_t color);

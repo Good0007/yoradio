@@ -533,6 +533,10 @@ bool Audio::connecttohost(const char* host, const char* user, const char* pwd) {
         if(endsWith(extension, ".wav"))   m_expectedCodec = CODEC_WAV;
         if(endsWith(extension, ".m4a"))   m_expectedCodec = CODEC_M4A;
         if(endsWith(extension, ".flac"))  m_expectedCodec = CODEC_FLAC;
+        if(endsWith(extension, ".ts") || indexOf(extension, ".ts?", 0) >= 0) {
+            m_expectedCodec = CODEC_AAC;
+            m_f_ts = true;
+        }
         if(endsWith(extension, ".asx"))  m_expectedPlsFmt = FORMAT_ASX;
         if(endsWith(extension, ".m3u"))  m_expectedPlsFmt = FORMAT_M3U;
         if(endsWith(extension, ".m3u8")) m_expectedPlsFmt = FORMAT_M3U8;
@@ -635,6 +639,12 @@ bool Audio::httpPrint(const char* host) {
     if(endsWith(extension, ".wav"))   m_expectedCodec = CODEC_WAV;
     if(endsWith(extension, ".m4a"))   m_expectedCodec = CODEC_M4A;
     if(endsWith(extension, ".flac"))  m_expectedCodec = CODEC_FLAC;
+    // 某些 HLS 源对 TS 分片返回非标准 MIME（如 text/plain 或 application/octet-stream），
+    // 提前依据 URL 扩展名判定 .ts，标记为 AAC TS 流，便于 CT_TXT 回退时仍能正确播放
+    if(endsWith(extension, ".ts") || indexOf(extension, ".ts?", 0) >= 0) {
+        m_expectedCodec = CODEC_AAC;
+        m_f_ts = true;
+    }
     if(endsWith(extension, ".asx"))  m_expectedPlsFmt = FORMAT_ASX;
     if(endsWith(extension, ".m3u"))  m_expectedPlsFmt = FORMAT_M3U;
     if(endsWith(extension, ".m3u8")) m_expectedPlsFmt = FORMAT_M3U8;
@@ -2563,6 +2573,7 @@ void Audio::loop() {
         static int32_t remaintime, timestamp1, timestamp2; // m3u8 time management
         const char* host;
 
+        if(m_f_Log) log_i("[M3U8] loop() datamode=%d, f_noNewHost=%d", getDatamode(), f_noNewHost);
         switch(getDatamode()){
             case HTTP_RESPONSE_HEADER:
                 playAudioData(); // fill I2S DMA buffer
@@ -2578,15 +2589,18 @@ void Audio::loop() {
                 if(host){
                     f_noNewHost = false;
                     timestamp1 = millis();
+                    if(m_f_Log) log_i("[M3U8] got new host: %s", host);
                     httpPrint(host);
                 }
                 else {
                     f_noNewHost = true;
                     timestamp2 = millis() + remaintime;
+                    if(m_f_Log) log_i("[M3U8] no new host, remaintime=%d", remaintime);
                     setDatamode(AUDIO_DATA); //fake datamode, we have no new audiosequence yet, so let audio run
                 }
                 break;
             case AUDIO_DATA:
+                if(m_f_Log && (millis() % 5000) < 100) log_i("[M3U8] AUDIO_DATA: m_f_ts=%d, bufferFilled=%d", m_f_ts, InBuff.bufferFilled());
                 if(m_f_ts) processWebStreamTS();  // aac or aacp with ts packets
                 else       processWebStreamHLS(); // aac or aacp normal stream
                 if(f_noNewHost){
@@ -2614,6 +2628,7 @@ bool Audio::readPlayListData() {
     if(getDatamode() != AUDIO_PLAYLISTINIT) return false;
     if(_client->available() == 0) return false;
 
+    if(m_f_Log) log_i("[M3U8] readPlayListData() starting, available bytes: %d", _client->available());
     uint32_t chunksize = 0; uint8_t readedBytes = 0;
     if(m_f_chunked) chunksize = chunkedDataTransfer(&readedBytes);
 
@@ -2671,6 +2686,7 @@ bool Audio::readPlayListData() {
 
     } // outer while
     lines = m_playlistContent.size();
+    if(m_f_Log) log_i("[M3U8] readPlayListData() completed, read %d lines", lines);
     for (int i = 0; i < lines ; i++) { // print all string in first vector of 'arr'
         if(m_f_Log) log_i("pl=%i \"%s\"", i, m_playlistContent[i]);
     }
@@ -2813,6 +2829,7 @@ const char* Audio::parsePlaylist_M3U8(){
     uint8_t lines = m_playlistContent.size();
     bool f_begin = false;
     uint8_t occurence = 0;
+    if(m_f_Log) log_i("[M3U8] parsePlaylist_M3U8() called, lines=%d", lines);
     if(lines){
         for(int i= 0; i < lines; i++){
             if(strlen(m_playlistContent[i]) == 0) continue;                    // empty line
@@ -2827,6 +2844,7 @@ const char* Audio::parsePlaylist_M3U8(){
             // #EXT-X-STREAM-INF:BANDWIDTH=22050,CODECS="mp4a.40.2"
             // http://ample.revma.ihrhls.com/zc7729/63_sdtszizjcjbz02/playlist.m3u8
             if(startsWith(m_playlistContent[i],"#EXT-X-STREAM-INF:")){
+                if(m_f_Log) log_i("[M3U8] found #EXT-X-STREAM-INF: %s", m_playlistContent[i]);
                 if(occurence > 0) break; // no more than one #EXT-X-STREAM-INF: (can have different BANDWIDTH)
                 occurence++;
                 if(!endsWith(m_playlistContent[i+1], "m3u8")){ // we have a new m3u8 playlist, skip to next line
@@ -2842,6 +2860,12 @@ const char* Audio::parsePlaylist_M3U8(){
                         log_e("codec %s in m3u8 playlist not supported", m_playlistContent[i] + pos1);
                         goto exit;
                     }
+                    else {
+                        if(m_f_Log) log_i("[M3U8] found supported AAC codec");
+                    }
+                }
+                else {
+                    if(m_f_Log) log_i("[M3U8] next line is m3u8, will redirect");
                 }
                 i++;                                                    // next line
                 if(i == lines) continue; // and exit for()
@@ -2945,10 +2969,11 @@ const char* Audio::parsePlaylist_M3U8(){
                 m_playlistURL.pop_back();
                 m_playlistURL.shrink_to_fit();
         }
-        if(m_f_Log) log_i("now playing %s", m_playlistBuff);
+        if(m_f_Log) log_i("[M3U8] returning segment URL: %s", m_playlistBuff);
         return m_playlistBuff;
     }
     else{
+        if(m_f_Log) log_i("[M3U8] no segments in playlist URL queue");
         return NULL;
     }
 exit:
@@ -3905,9 +3930,10 @@ bool Audio::parseContentType(char* ct) {
             break;
         case CT_M3U8:
             m_playlistFormat = FORMAT_M3U8;
+            if(m_f_Log) log_i("[M3U8] Content-Type recognized as M3U8, playlist format set");
             break;
         case CT_TXT: // overwrite text/plain
-            if(m_expectedCodec == CODEC_AAC){ m_codec = CODEC_AAC; if(m_f_Log) log_i("set ct from M3U8 to AAC");}
+            if(m_expectedCodec == CODEC_AAC || m_f_ts){ m_codec = CODEC_AAC; if(m_f_Log) log_i("set ct from M3U8 to AAC (or TS inferred)");}
             if(m_expectedCodec == CODEC_MP3){ m_codec = CODEC_MP3; if(m_f_Log) log_i("set ct from M3U8 to MP3");}
 
             if(m_expectedPlsFmt == FORMAT_ASX){ m_playlistFormat = FORMAT_ASX;  if(m_f_Log) log_i("set playlist format to ASX");}
