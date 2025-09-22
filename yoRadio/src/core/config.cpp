@@ -455,6 +455,7 @@ void Config::setShowweather(bool val){
   timekeeper.forceWeather = true;
   display.putRequest(SHOWWEATHER);
 }
+
 void Config::setWeatherKey(const char *val){
   saveValue(store.weatherkey, val, WEATHERKEY_LENGTH);
   display.putRequest(NEWMODE, CLEAR);

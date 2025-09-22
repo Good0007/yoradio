@@ -6,6 +6,9 @@
 #include "display.h"
 #include "network.h"
 #include "netserver.h"
+#include <esp_ota_ops.h>
+#include <esp_partition.h>
+#include <esp_task_wdt.h>
 #include "../pluginsManager/pluginsManager.h"
 
 long encOldPosition  = 0;
@@ -383,8 +386,14 @@ void onBtnLongPressStart(int id) {
 #       if defined(DUMMYDISPLAY) && !defined(USE_NEXTION)
         break;
 #       endif
-        // 长按中心键：进入/退出播放列表
+        // 检查集成模式（编译时配置）
+#       if INTEGRATION_MODE
+        // 集成模式：长按中心键切换到其他系统
+        switch_to_other_app(false);
+#       else
+        // 普通模式：长按中心键进入/退出播放列表
         display.putRequest(NEWMODE, display.mode() == PLAYER ? STATIONS : PLAYER);
+#       endif
         break;
       }
     case EVT_ENC2BTNB: {
@@ -555,6 +564,57 @@ void onBtnClick(int id) {
     }
     #endif
     default: break;
+  }
+}
+
+// 安全的分区切换函数 - 完全避免显示和网络操作
+// 极简安全的分区切换函数 - 避免看门狗超时
+void switch_to_other_app(bool xiaozhi) {
+  // 禁用看门狗，防止重启过程中触发
+  esp_task_wdt_delete(xTaskGetCurrentTaskHandle());
+  
+  // 输出切换信息
+  Serial.println("##CLI.META#: 即将切换系统...");
+  Serial.flush();
+  
+  // 快速停止播放器，但不等待
+  player.sendCommand({PR_STOP, 0});
+  
+  // 获取分区信息
+  const esp_partition_t *running = esp_ota_get_running_partition();
+  const esp_partition_t *target = NULL;
+  
+  if (xiaozhi) {
+    target = esp_partition_find_first(ESP_PARTITION_TYPE_APP, ESP_PARTITION_SUBTYPE_APP_OTA_0, NULL);
+  } else {
+    target = esp_ota_get_next_update_partition(NULL);
+  }
+  
+  if (!running || !target) {
+    Serial.println("ERROR: 分区获取失败");
+    return;
+  }
+  
+  // 输出分区信息
+  Serial.printf("当前运行分区: %s (0x%lx)\n", running->label, running->address);
+  Serial.printf("切换至分区: %s (0x%lx)\n", target->label, target->address);
+  Serial.flush();
+  
+  // 快速关闭WiFi
+  WiFi.mode(WIFI_OFF);
+  
+  // 设置启动分区
+  esp_err_t err = esp_ota_set_boot_partition(target);
+  if (err == ESP_OK) {
+    Serial.println("分区切换成功，重启中...");
+    Serial.flush();
+    
+    // 立即重启，不等待
+    esp_restart();
+  } else {
+    Serial.printf("ERROR: 分区切换失败: %s\n", esp_err_to_name(err));
+    Serial.println("切换分区系统崩溃");
+    Serial.flush();
   }
 }
 

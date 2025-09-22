@@ -23,6 +23,7 @@ ESP32-S3 Configuration - DEBUG VERSION
 /*        基本设置                 */
 #define LED_INVERT      false               
 #define L10N_LANGUAGE   CN                  /* 使用中文语言包 */
+#define INTEGRATION_MODE true               /* 集成模式开关 - 设为true启用长按中心键切换系统 */
 
 /*        时区设置 - 北京时间（东八区）  */
 #define DEFAULT_TIMEZONE_HOUR   8           /* UTC+8 北京时间 */

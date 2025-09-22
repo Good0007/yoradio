@@ -11,6 +11,9 @@
 #include "mqtt.h"
 #include "timekeeper.h"
 #include "../pluginsManager/pluginsManager.h"
+#ifdef INTEGRATION_MODE
+#include "wifi_nvs_connect.h"
+#endif
 
 #ifndef WIFI_ATTEMPTS
   #define WIFI_ATTEMPTS  16
@@ -55,6 +58,23 @@ void MyNetwork::WiFiLostConnection(WiFiEvent_t event, WiFiEventInfo_t info){
 }
 
 bool MyNetwork::wifiBegin(bool silent){
+#ifdef INTEGRATION_MODE
+  // 如果是从 begin() 调用，NVS 连接已经在 begin() 中尝试过了
+  // 这里只处理后台任务的情况
+  if(silent) {
+    // 后台任务中，总是输出 NVS 连接信息
+    Serial.println("##[BOOT]#\tBackground task: Trying to connect from NVS...");
+    
+    if(try_connect_wifi_from_nvs(10, 10000)) {
+      Serial.println();
+      Serial.println("##[BOOT]#\tConnected to WiFi from NVS successfully!");
+      return true;
+    }
+    
+    Serial.println("##[BOOT]#\tNVS WiFi connection failed, trying config.ssids...");
+  }
+#endif
+
   uint8_t ls = (config.store.lastSSID == 0 || config.store.lastSSID > config.ssidsCount) ? 0 : config.store.lastSSID - 1;
   uint8_t startedls = ls;
   uint8_t errcnt = 0;
@@ -113,15 +133,33 @@ void searchWiFi(void * pvParameters){
 
 #define DBGAP false
 
+
 void MyNetwork::begin() {
   BOOTLOG("network.begin");
   config.initNetwork();
-  if (config.ssidsCount == 0 || DBGAP) {
+  
+  // 先尝试集成模式的 NVS 连接
+  bool wifiConnected = false;
+  
+#ifdef INTEGRATION_MODE
+  // 集成模式下，优先尝试从 NVS 连接，不管配置文件是否存在
+  Serial.println("##[BOOT]#\tIntegration mode: Trying to connect from NVS first...");
+  if(try_connect_wifi_from_nvs(10, 10000)) {
+    Serial.println("##[BOOT]#\tConnected to WiFi from NVS successfully!");
+    wifiConnected = true;
+  } else {
+    Serial.println("##[BOOT]#\tNVS WiFi connection failed, checking config.ssids...");
+  }
+#endif
+
+  // 如果 NVS 连接失败，且没有配置文件，启动 AP 热点
+  if (!wifiConnected && (config.ssidsCount == 0 || DBGAP)) {
     raiseSoftAP();
     return;
   }
+  
   if(config.getMode()!=PM_SDCARD){
-    if(!wifiBegin()){
+    if(!wifiConnected && !wifiBegin()){
       raiseSoftAP();
       Serial.println("##[BOOT]#\tdone");
       return;
@@ -133,8 +171,20 @@ void MyNetwork::begin() {
       mqttInit();
     #endif
   }else{
-    status = SDREADY;
-    xTaskCreatePinnedToCore(searchWiFi, "searchWiFi", 1024 * 4, NULL, 0, NULL, SEARCH_WIFI_CORE_ID);
+    if(!wifiConnected) {
+      status = SDREADY;
+      xTaskCreatePinnedToCore(searchWiFi, "searchWiFi", 1024 * 4, NULL, 0, NULL, SEARCH_WIFI_CORE_ID);
+    } else {
+      // NVS 连接成功，直接设置为已连接状态
+      status = CONNECTED;
+      setWifiParams();
+      netserver.begin(true);
+      telnet.begin(true);
+      display.putRequest(NEWIP, 0);
+      #ifdef MQTT_ROOT_TOPIC
+        mqttInit();
+      #endif
+    }
   }
   
   Serial.println("##[BOOT]#\tdone");

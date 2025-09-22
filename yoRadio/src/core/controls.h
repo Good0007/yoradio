@@ -30,6 +30,7 @@ void onBtnLongPressStop(int id);
 void setIRTolerance(uint8_t tl);
 void setEncAcceleration(uint16_t acc);
 void flipTS();
+void switch_to_other_app(bool xiaozhi = false);  // 切换到其他应用系统
 
 extern __attribute__((weak)) void ctrls_on_loop();
 
