@@ -16,6 +16,20 @@
 #define FIND_CH   findChineseChar_20
 
 // ST7789 7PIN 显示驱动 - ESP32-S3优化版本
+
+// 显示偏移配置（基于ESP-IDF标准）
+#ifdef TFT_OFFSET_X
+    static const uint16_t display_offset_x = TFT_OFFSET_X;
+#else
+    static const uint16_t display_offset_x = 0;
+#endif
+
+#ifdef TFT_OFFSET_Y
+    static const uint16_t display_offset_y = TFT_OFFSET_Y;
+#else
+    static const uint16_t display_offset_y = 0;
+#endif
+
 // ST7789 命令定义
 #define ST7789_SWRESET  0x01
 #define ST7789_SLPOUT   0x11
@@ -62,6 +76,12 @@ void writeData16Array(uint16_t *data, uint32_t len) {
 
 // 设置显示窗口
 void setDisplayWindow(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2) {
+    // 应用显示偏移（ESP-IDF标准方式）
+    x1 += display_offset_x;
+    x2 += display_offset_x;
+    y1 += display_offset_y;
+    y2 += display_offset_y;
+
     // 设置列地址
     writeCommand(ST7789_CASET);
     writeData16(x1);
@@ -114,9 +134,23 @@ void DspCore::initDisplay() {
         writeData(0x55);  // 16-bit color
         delay(10);
         
-        // 设置显示方向
+        // 设置显示方向 - 恢复到正常的旋转模式
         writeCommand(ST7789_MADCTL);
-        writeData(0x00);  // 默认方向
+        #ifdef ROTATION_MODE
+            #if ROTATION_MODE == 1
+                writeData(0x60);  // 90度向右旋转
+            #elif ROTATION_MODE == 2
+                writeData(0xC0);  // 180度旋转
+            #elif ROTATION_MODE == 3
+                writeData(0xA0);  // 270度旋转（向左旋转90度）
+            #else
+                writeData(0x00);  // 默认方向（0度）
+            #endif
+        #elif ROTATE_90
+            writeData(0xA0);  // 兼容旧设置，默认270度旋转（向左旋转90度）
+        #else
+            writeData(0x00);  // 默认方向
+        #endif
         
         // 正常显示模式
         writeCommand(ST7789_NORON);
@@ -331,11 +365,11 @@ void DspCore::cp437(bool x) { /* 不需要实现 */ }
 
 // Adafruit_GFX兼容方法
 void DspCore::setAddrWindow(int16_t x, int16_t y, int16_t w, int16_t h) {
-    // 设置窗口区域，直接调用我们的底层方法
-    uint16_t x_start = x;
-    uint16_t y_start = y;
-    uint16_t x_end = x + w - 1;
-    uint16_t y_end = y + h - 1;
+    // 应用显示偏移
+    uint16_t x_start = x + display_offset_x;
+    uint16_t y_start = y + display_offset_y;
+    uint16_t x_end = x + w - 1 + display_offset_x;
+    uint16_t y_end = y + h - 1 + display_offset_y;
     
     writeCommand(ST7789_CASET);
     writeData16(x_start);

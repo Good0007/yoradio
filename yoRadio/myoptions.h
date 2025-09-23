@@ -50,7 +50,9 @@ ESP32-S3 Configuration - DEBUG VERSION
 
 /*        显示屏配置               */
 #define BRIGHTNESS_PIN    15                /* 背光控制 */
-#define ROTATE_90         true              /* 显示旋转 */          
+#define ROTATION_MODE     3                 /* 旋转模式: 0=0度, 1=90度右转, 2=180度, 3=270度左转 */
+#define TFT_OFFSET_X      80                /* X轴偏移量，向右偏移80像素 */
+#define TFT_OFFSET_Y      0                 /* Y轴偏移量，向下偏移像素 */          
 
 /*        音频设置 - I2S直接输出到MAX98357A */
 #define I2S_DOUT          5                 /* I2S数据输出到MAX98357A的DIN */
