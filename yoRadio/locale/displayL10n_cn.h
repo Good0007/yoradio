@@ -63,7 +63,7 @@ const char  const_DlgVolume[]    PROGMEM = "音量";
 const char    const_DlgLost[]    PROGMEM = "连接断开";
 const char  const_DlgUpdate[]    PROGMEM = "更新中";
 const char const_DlgNextion[]    PROGMEM = "触摸屏";
-const char const_getWeather[]    PROGMEM = "";
+const char const_getWeather[]    PROGMEM = "获取天气中...";
 const char  const_waitForSD[]    PROGMEM = "SD卡索引中";
 
 const char        apNameTxt[]    PROGMEM = "热点模式";

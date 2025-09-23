@@ -8,7 +8,7 @@ enum import_e      : uint8_t  { IMDONE=0, IMPL=1, IMWIFI=2 };
 const char emptyfs_html[] PROGMEM = R"(
 <!DOCTYPE html><html><head><meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=0.25"><meta charset="UTF-8">
 <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAMAAACdt4HsAAAAYFBMVEUAAADYw1PcyVjYxFTaxlXYxFTbx1bcyVjZxVXbyFfcyFfaxlbax1bcyVjcyVjbyFfbyFfZxVXaxlbbx1fcyFjcyVjbx1fZxVXcyFjcyVjax1bbyFfcyVjbyFfax1bWwVKMlHGzAAAAH3RSTlMA+wv0zu6dBeVqSryjMRaCU97Fjz8liNk5HbFdDnWsEHoUsAAAAeFJREFUWMPtlllyrDAMRS1P2NjMQzc9RPvf5Ut1IPYjDRbJR1KVnD8Z7i1ZsgXsh1JW3usrC9Ta+2og620DiCjaaY65U4AIpqLqBb7R3B5xJucYRpI+U7jgHwsVLgjSLu74DmSvMTdhQVMMHAYeBhiQFAO5Y3CiGFzWBhDilmKQ4zsqm5uwQGvkCRfsytFkJIOhWWo+vz8uCfWMRqEVAJwsn+PsKgFA+YJR4UWe50Oc1Gt8vrFfyGC19153+afUvVMA+ADAaH5QXhvA/wB3yEICfgAqsvys8BngiPor4AaSpM8BN7lQRrrAbcBSLvMeKqmvVhtYh8mxqjCi7Tnnk4YDKYzRy9DPA2Uy9CoYDBShsCrKitxCnUUnm7qHFwyUYTlOAXYHWxP0TTzBbm1UBGIPfMkDZRcMur1bFPdAxEQPXhI1TNLSj+HxK9l9u8H41RrcKQZub5THbdxA7M3WAZL/EvRp0PDPGEgM9CxBqo9mYMcpAAPyzNZMx2aysUUWzYSi7lzSwALGGG3rvO/zurajM4BQJh0aXAGglACYg2v6uw64h2ZJfOIcp2lxh4ZgkEncRjAKF8AtYCI53M2mQc1IlNrAM7lyZ0akHKURsVaokxuLYxfD6ot8w+nOFuyP5/wDsZKME0E1GogAAAAASUVORK5CYII=">
-<title>ёRadio - WEB Board Uploader</title><style>html, body { margin: 0; padding: 0; height: 100%; } body{background-color:#000;color:#e3d25f;font-size:20px;display:flex;flex-direction:column;}
+<title>ёRadio - 网页文件上传器</title><style>html, body { margin: 0; padding: 0; height: 100%; } body{background-color:#000;color:#e3d25f;font-size:20px;display:flex;flex-direction:column;}
 hr{margin:20px 0;border:0; border-top:#555 1px solid;} p{text-align:center;margin-bottom:10px;} section{max-width:500px; text-align:center;margin:0 auto 30px auto;padding:20px;flex:1;}
 .hidden{display:none;}a { color: var(--accent-color); text-decoration: none; font-weight: bold } a:hover { text-decoration: underline }
 #copy { text-align: center; padding: 14px; font-size: 14px; }
@@ -20,31 +20,31 @@ input[type=text],input[type=password]{width:170px;background:#272727;color:#e3d2
 <script type="text/javascript" src="/variables.js"></script>
 </head><body>
 <section>
-<h2>ёRadio - WEB Board Uploader</h2>
+<h2>ёRadio - 网页文件上传器</h2>
 <hr />
-<span>Select <u>ALL</u> files from <i>yoRadio/data/www/</i><br />and upload them using the form below</span>
+<span>选择<u>全部</u>文件来自 <i>yoRadio/data/www/</i><br />并使用下面的表单上传它们</span>
 <hr />
 <form action="/webboard" method="post" enctype="multipart/form-data">
-<p><label for="www">www:</label> <input type="file" name="www" id="www" multiple></p>
+<p><label for="www">网页文件:</label> <input type="file" name="www" id="www" multiple></p>
 <hr />
-<span>-= OPTIONAL =-<br />You can also upload <i>playlist.csv</i><br />and <i>wifi.csv files</i> from your backup</span>
-<p><label for="data">wifi:</label><input type="file" name="data" id="data" multiple></p>
+<span>-= 可选 =-<br />您也可以上传 <i>playlist.csv</i><br />和 <i>wifi.csv</i> 配置文件</span>
+<p><label for="data">配置文件:</label><input type="file" name="data" id="data" multiple></p>
 <hr />
-<p><input type="submit" name="submit" value="Upload Files"></p>
+<p><input type="submit" name="submit" value="上传文件"></p>
 </form>
 <div style="padding:10px 0 0;" id="wupload">
 <hr />
 <form name="wifiform" method="post" enctype="multipart/form-data">
-<span>-= OPTIONAL =-<br />If you can't connect from PC to 192.168.4.1 address<br />setup WiFi connection first</span>
-<div class="flex"><div><label for="ssid">ssid:</label><input type="text" id="ssid" name="ssid" value="" maxlength="30" autocomplete="off"></div>
-<div><label for="pass">pass:</label><input type="password" id="pass" name="pass" value="" maxlength="40" autocomplete="off"></div>
+<span>-= 可选 =-<br />如果无法从电脑连接到 192.168.4.1 地址<br />请先设置WiFi连接</span>
+<div class="flex"><div><label for="ssid">WiFi名称:</label><input type="text" id="ssid" name="ssid" value="" maxlength="30" autocomplete="off"></div>
+<div><label for="pass">WiFi密码:</label><input type="password" id="pass" name="pass" value="" maxlength="40" autocomplete="off"></div>
 </div>
-<p><input type="submit" name="submit" value="Save Credentials"></p>
+<p><input type="submit" name="submit" value="保存凭据"></p>
 </form>
 </div>
 </section>
-<p><a href="/emergency">emergency firmware uploader</a></p>
-<div id="copy">powered by <a target="_blank" href="https://github.com/e2002/yoradio/">ёRadio</a><span id="version"></span></div>
+<p><a href="/emergency">紧急固件上传器</a></p>
+<div id="copy">技术支持 <a target="_blank" href="https://github.com/e2002/yoradio/">ёRadio</a><span id="version"></span></div>
 </body>
 <script>
 document.wifiform.action = `/${formAction}`;
@@ -80,9 +80,9 @@ const char index_html[] PROGMEM = R"(
 const char emergency_form[] PROGMEM = R"(
 <form method="POST" action="/update" enctype="multipart/form-data">
   <input type="hidden" name="updatetarget" value="fw" />
-  <label for="uploadfile">upload firmware</label>
+  <label for="uploadfile">上传固件</label>
   <input type="file" id="uploadfile" accept=".bin,.hex" name="update" />
-  <input type="submit" value="Update" />
+  <input type="submit" value="更新固件" />
 </form>
 )";
 struct nsRequestParams_t

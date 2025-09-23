@@ -82,7 +82,7 @@ bool NetServer::begin(bool quiet) {
   webserver.onNotFound(handleNotFound);
   webserver.onFileUpload(handleUpload);
 
-  webserver.serveStatic("/", SPIFFS, "/www/").setCacheControl("max-age=31536000");
+  webserver.serveStatic("/", SPIFFS, "/www/").setCacheControl("max-age=300"); // 5分钟缓存
 #ifdef CORS_DEBUG
   DefaultHeaders::Instance().addHeader(F("Access-Control-Allow-Origin"), F("*"));
   DefaultHeaders::Instance().addHeader(F("Access-Control-Allow-Headers"), F("content-type"));

@@ -43,7 +43,7 @@ const WidgetConfig apNameConf     PROGMEM = { TFT_FRAMEWDT, 66, 2, WA_CENTER };
 const WidgetConfig apName2Conf    PROGMEM = { TFT_FRAMEWDT, 90, 2, WA_CENTER };
 const WidgetConfig apPassConf     PROGMEM = { TFT_FRAMEWDT, 130, 2, WA_CENTER };
 const WidgetConfig apPass2Conf    PROGMEM = { TFT_FRAMEWDT, 154, 2, WA_CENTER };
-const WidgetConfig  clockConf     PROGMEM = { 0, 168, 0, WA_RIGHT };
+const WidgetConfig  clockConf     PROGMEM = { 0, 168, 0, WA_CENTER };
 const WidgetConfig vuConf         PROGMEM = { TFT_FRAMEWDT, 94, 1, WA_CENTER };
 
 const WidgetConfig bootWdtConf    PROGMEM = { 0, 162, 1, WA_CENTER };
@@ -60,7 +60,7 @@ const char         voltxtFmt[]    PROGMEM = "%d";
 const char        bitrateFmt[]    PROGMEM = "%d kBs";
 
 /* MOVES  */                             /* { left, top, width } */
-const MoveConfig    clockMove     PROGMEM = { 0, 168, 0 };
+const MoveConfig    clockMove     PROGMEM = { 0, 158, 0 };
 const MoveConfig   weatherMove    PROGMEM = { TFT_FRAMEWDT, 202, MAX_WIDTH };
 const MoveConfig   weatherMoveVU  PROGMEM = { TFT_FRAMEWDT, 202, MAX_WIDTH };
 

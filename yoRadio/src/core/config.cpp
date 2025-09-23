@@ -595,7 +595,7 @@ void Config::setDefaults() {
   store.contrast=55;
   strlcpy(store.sntp1,"pool.ntp.org", 35);
   strlcpy(store.sntp2,"cn.pool.ntp.org", 35);
-  store.showweather=false;
+  store.showweather=true;                   // 默认开启天气显示
   strlcpy(store.weatherlat,"39.9042", 10);  // 北京纬度
   strlcpy(store.weatherlon,"116.4074", 10); // 北京经度
   strlcpy(store.weatherkey,"", WEATHERKEY_LENGTH);
