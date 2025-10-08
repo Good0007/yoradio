@@ -90,11 +90,26 @@ void Config::init() {
   store.play_mode = store.play_mode & 0b11;
   if(store.play_mode>1) store.play_mode=PM_WEB;
   _initHW();
-  if (!SPIFFS.begin(true)) {
-    Serial.println("##[ERROR]#\tSPIFFS Mount Failed");
-    return;
+  
+  Serial.println("##[SPIFFS]## Initializing SPIFFS on WWW partition...");
+  // 使用专用www分区存储网页文件
+  if (!SPIFFS.begin(false, "/spiffs", 10, "www")) {
+    Serial.println("##[SPIFFS]## WWW partition mount failed, trying to format...");
+    if (!SPIFFS.begin(true, "/spiffs", 10, "www")) {
+      Serial.println("##[ERROR]#\tWWW partition SPIFFS Mount Failed. Trying default partition...");
+      // 默认行为 - 使用第一个找到的SPIFFS分区
+      if (!SPIFFS.begin(true)) {
+        Serial.println("##[ERROR]#\tSPIFFS Mount Failed");
+        return;
+      }
+      BOOTLOG("SPIFFS mounted on default partition");
+    } else {
+      Serial.println("##[SPIFFS]## WWW partition formatted and mounted");
+    }
+  } else {
+    Serial.println("##[SPIFFS]## WWW partition mounted successfully");
   }
-  BOOTLOG("SPIFFS mounted");
+
   emptyFS = _isFSempty();
   if(emptyFS) BOOTLOG("SPIFFS is empty!");
   ssidsCount = 0;

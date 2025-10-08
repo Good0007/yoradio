@@ -1,0 +1,13 @@
+# ESP-IDF Partition Table
+# Name,   Type, SubType, Offset,  Size, Flags
+nvs,      data, nvs,     0x9000,    0x4000,
+otadata,  data, ota,     0xd000,    0x2000,
+phy_init, data, phy,     0xf000,    0x1000,
+# 语音唤醒模型
+model,    data, spiffs,  0x10000,   0xF0000,
+# 0-小智 1-收音机 2-桌面
+ota_0,    app,  ota_0,   0x100000,  6M,
+ota_1,    app,  ota_1,   0x700000,  3M,
+ota_2,    app,  ota_2,   0xA00000,  2M,
+# 收音机系统网页文件
+www,      data, spiffs,  0xC00000,  1M,
