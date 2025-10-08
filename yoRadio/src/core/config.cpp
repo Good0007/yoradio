@@ -569,7 +569,7 @@ void Config::setDefaults() {
   store.lastStation = 0;
   store.countStation = 0;
   store.lastSSID = 0;
-  store.audioinfo = false;
+  store.audioinfo = true; //音频信息
   store.smartstart = 2;
 #ifdef DEFAULT_TIMEZONE_HOUR
   store.tzHour = DEFAULT_TIMEZONE_HOUR;  // 使用自定义时区（北京时间UTC+8）
@@ -583,7 +583,7 @@ void Config::setDefaults() {
 #endif
   store.timezoneOffset = 0;
 
-  store.vumeter=false;
+  store.vumeter=true; //音量表
   store.softapdelay=0;
   store.flipscreen=false;
   store.invertdisplay=false;
@@ -595,14 +595,14 @@ void Config::setDefaults() {
   store.contrast=55;
   strlcpy(store.sntp1,"pool.ntp.org", 35);
   strlcpy(store.sntp2,"cn.pool.ntp.org", 35);
-  store.showweather=true;                   // 默认开启天气显示
+  store.showweather=false;                   // 默认关闭天气显示
   strlcpy(store.weatherlat,"39.9042", 10);  // 北京纬度
   strlcpy(store.weatherlon,"116.4074", 10); // 北京经度
   strlcpy(store.weatherkey,"", WEATHERKEY_LENGTH);
   store._reserved = 0;
   store.lastSdStation = 0;
   store.sdsnuffle = false;
-  store.volsteps = 1;
+  store.volsteps = 10;
   store.encacc = 200;
   store.play_mode = 0;
   store.irtlp = 35;
