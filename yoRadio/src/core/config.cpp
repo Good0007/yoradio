@@ -576,7 +576,7 @@ void Config::resetSystem(const char *val, uint8_t clientId){
 void Config::setDefaults() {
   store.config_set = 4262;
   store.version = CONFIG_VERSION;
-  store.volume = 12;
+  store.volume = 30;
   store.balance = 0;
   store.trebble = 0;
   store.middle = 0;
@@ -601,7 +601,7 @@ void Config::setDefaults() {
   store.vumeter=true; //音量表
   store.softapdelay=0;
   store.flipscreen=false;
-  store.invertdisplay=true; //反转屏幕
+  store.invertdisplay=false; //反转屏幕
   store.numplaylist=false;
   store.fliptouch=false;
   store.dbgtouch=false;
