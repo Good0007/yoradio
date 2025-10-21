@@ -75,6 +75,13 @@ void setup() {
   pm.on_setup();
   config.init();
   display.init();
+  
+  // 在显示初始化后应用屏幕反转设置
+  if (config.store.invertdisplay) {
+    display.invert();
+    Serial.println("##[MAIN]## Applied invertdisplay setting after display.init()");
+  }
+  
   player.init();
   network.begin();
   if (network.status != CONNECTED && network.status!=SDREADY) {

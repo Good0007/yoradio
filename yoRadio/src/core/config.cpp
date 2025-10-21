@@ -601,7 +601,7 @@ void Config::setDefaults() {
   store.vumeter=true; //音量表
   store.softapdelay=0;
   store.flipscreen=false;
-  store.invertdisplay=false; //反转屏幕
+  store.invertdisplay=true; //反转屏幕
   store.numplaylist=false;
   store.fliptouch=false;
   store.dbgtouch=false;
